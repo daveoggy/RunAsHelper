@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -174,10 +175,8 @@ namespace RunAsHelper.ViewModel
         {
             var options = new OptionsView();
 
-            var xy = MainWindow.Instance.FindName("MyTaskbarIcon");
+            options.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-            options.Owner = xy as Window;
-            options.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             options.Show();
 
             EventHandler x = null;

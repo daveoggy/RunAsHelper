@@ -10,71 +10,85 @@
         DataContext="{Binding Source={StaticResource Locator}, Path=Main}">
     <Window.Resources>
         <DataTemplate x:Key="ListBoxItemTemplate">
-            <StackPanel Orientation="Vertical">
+            <!--<StackPanel Orientation="Vertical">
                 <Image Source="{Binding IconImage}"
                        Width="32"
                        Height="32"/>
                 <TextBlock Text="{Binding ApplicationName}" VerticalAlignment="Center"/>
-            </StackPanel>
+            </StackPanel>-->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="SharedGroup" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="32" />
+                    <RowDefinition Height="20" />
+                </Grid.RowDefinitions>
+                <Image Source="{Binding IconImage}"
+                       Width="32"
+                       Height="32"/>
+                <TextBlock Grid.Row="1" Text="{Binding ApplicationName}" HorizontalAlignment="Center"/>
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Key="ProfileTemplate">
             <StackPanel Orientation="Horizontal">
                 <Image Source="../Images/profile-icon-png-898.png"
                        Width="32"
                        Height="32"/>
-                <TextBlock Text="{Binding ProfileName}" VerticalAlignment="Center"/>
+                <TextBlock TextWrapping="Wrap" Text="{Binding ProfileName}" VerticalAlignment="Center"/>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
     <DockPanel>
-        <Button Margin="10" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Width="80" Content="Close" Click="CloseOptionsDialog" />
+        <Button Style="{StaticResource AccentedSquareButtonStyle}" Margin="10" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Width="80" Content="Close" Click="CloseOptionsDialog" />
         <m:MetroTabControl>
             <m:MetroTabItem Header="User Profiles">
                 <DockPanel Margin="10">
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-                        <Button Width="80" Content="Add" Command="{Binding AddProfile}" />
-                        <Button Width="80" Content="Remove" Command="{Binding RemoveProfile}" />
-                        <Button Width="80" Content="Edit" Command="{Binding EditProfile}" />
+                        <Button Margin="0,0,5,0" Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Add" Command="{Binding AddProfile}" />
+                        <Button Margin="0,0,5,0" Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Remove" Command="{Binding RemoveProfile}" />
+                        <Button Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Edit" Command="{Binding EditProfile}" />
                     </StackPanel>
-                    <ListBox Width="300" DockPanel.Dock="Left" 
-                             SelectedItem="{Binding SelectedProfile}"
+                    <ListBox SelectedItem="{Binding SelectedProfile}"
                              ItemsSource="{Binding Profiles}" 
-                             ItemTemplate="{StaticResource ProfileTemplate}" />
-                    <StackPanel DataContext="{Binding SelectedProfile}">
-                        <TextBlock Margin="5" Text="{Binding Domain, FallbackValue=No Domain, Mode=OneWay, StringFormat=Username (\{0\}), TargetNullValue=No Domain}" />
-                        <TextBox m:TextBoxHelper.Watermark="name@work.com or work.com/name"  Height="30" 
-                                     VerticalContentAlignment="Center" 
-                                     Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,5" />
-
-                        <TextBlock Margin="5" Text="Password" />
-                        <PasswordBox VerticalContentAlignment="Center" Height="30" Name="UserPasswordBox" Margin="5,0,5,5"  />
-                        
-                        <TextBlock Margin="5" Text="Password Validity (Days)" />
-                        <m:NumericUpDown Minimum="1"></m:NumericUpDown>
-                    </StackPanel>
+                             ItemTemplate="{StaticResource ProfileTemplate}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <!--<ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>-->
+                    </ListBox>
                 </DockPanel>
             </m:MetroTabItem>
             <m:MetroTabItem Header="Applications">
                 <DockPanel Margin="10">
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-                        <Button Width="80" Content="Add" Command="{Binding AddApplication}" />
-                        <Button Width="80" Content="Remove" Command="{Binding RemoveApplication}" />
+                        <Button Width="80" Content="Add" Style="{StaticResource AccentedSquareButtonStyle}" Command="{Binding AddApplication}" />
+                        <Button Width="80" Content="Remove" Style="{StaticResource AccentedSquareButtonStyle}" Command="{Binding RemoveApplication}" />
                     </StackPanel>
-                    <ListBox SelectedItem="{Binding SelectedApplicationViewModel}" ItemsSource="{Binding Applications}" ItemTemplate="{StaticResource ListBoxItemTemplate}">
+                    <ListBox ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                SelectedItem="{Binding SelectedApplicationViewModel}" 
+                             ItemsSource="{Binding Applications}" 
+                             ItemTemplate="{StaticResource ListBoxItemTemplate}">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
                                 <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-                                <!--<Setter Property="Margin" Value="5"></Setter>-->
                             </Style>
                         </ListBox.ItemContainerStyle>
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel />
+                                <WrapPanel Grid.IsSharedSizeScope="True" />
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                     </ListBox>
                 </DockPanel>
+            </m:MetroTabItem>
+            <m:MetroTabItem Header="Options">
+                <StackPanel Margin="50">
+                    <m:ToggleSwitch OnLabel="Start with Windows (ON)" OffLabel="Start with Windows (OFF)" />
+                </StackPanel>
             </m:MetroTabItem>
         </m:MetroTabControl>
     </DockPanel>

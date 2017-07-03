@@ -7,7 +7,7 @@ namespace RunAsHelper.Views
     /// <summary>
     /// Interaction logic for OptionsView.xaml
     /// </summary>
-    public partial class OptionsView// : MetroWindow
+    public partial class OptionsView
     {
         public static OptionsView CurrentInstance { get; private set; }
 
