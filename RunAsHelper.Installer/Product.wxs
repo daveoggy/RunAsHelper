@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"><?define RunAsHelper_TargetDir=$(var.RunAsHelper.TargetDir)?>
+	<Product Id="*" Name="RunAsHelper.Installer" Language="1033" Version="1.0.0.0" Manufacturer="z" UpgradeCode="e15420e8-4df8-4d22-938e-c171f583dea5">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+
+		<Feature Id="ProductFeature" Title="RunAsHelper.Installer" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+			<ComponentGroupRef Id="ProgramFilesFolder_files" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="RunAsHelper.Installer" />
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+			<!-- <Component Id="ProductComponent"> -->
+				<!-- TODO: Insert files, registry keys, and other resources here. -->
+			<!-- </Component> -->
+		</ComponentGroup>
+	</Fragment>
+	<Fragment>
+	  <ComponentGroup Id="ProgramFilesFolder_files" Directory="ProgramFilesFolder">
+	    <Component Id="RunAsHelper.exe" Guid="c4fc362c-4912-4593-925c-37860c6fe40a">
+	      <File Id="RunAsHelper.exe" Name="RunAsHelper.exe" Source="$(var.RunAsHelper_TargetDir)RunAsHelper.exe" />
+	    </Component>
+	    <Component Id="RunAsHelper.exe.config" Guid="1dde9725-29e1-4d57-a607-045fbf59c21e">
+	      <File Id="RunAsHelper.exe.config" Name="RunAsHelper.exe.config" Source="$(var.RunAsHelper_TargetDir)RunAsHelper.exe.config" />
+	    </Component>
+	    <Component Id="GalaSoft.MvvmLight.Extras.WPF4.dll" Guid="c7ee3b56-4274-4099-a3a9-1a9eced80437">
+	      <File Id="GalaSoft.MvvmLight.Extras.WPF4.dll" Name="GalaSoft.MvvmLight.Extras.WPF4.dll" Source="$(var.RunAsHelper_TargetDir)GalaSoft.MvvmLight.Extras.WPF4.dll" />
+	    </Component>
+	    <Component Id="GalaSoft.MvvmLight.WPF4.dll" Guid="c681347e-fa69-4003-be83-43825874dcca">
+	      <File Id="GalaSoft.MvvmLight.WPF4.dll" Name="GalaSoft.MvvmLight.WPF4.dll" Source="$(var.RunAsHelper_TargetDir)GalaSoft.MvvmLight.WPF4.dll" />
+	    </Component>
+	    <Component Id="Hardcodet.Wpf.TaskbarNotification.dll" Guid="de467050-5d11-4a65-b54b-5d0a1bc2d7ef">
+	      <File Id="Hardcodet.Wpf.TaskbarNotification.dll" Name="Hardcodet.Wpf.TaskbarNotification.dll" Source="$(var.RunAsHelper_TargetDir)Hardcodet.Wpf.TaskbarNotification.dll" />
+	    </Component>
+	    <Component Id="MahApps.Metro.dll" Guid="70bb8749-d7f0-4ba5-bff7-a0fcb4b5858d">
+	      <File Id="MahApps.Metro.dll" Name="MahApps.Metro.dll" Source="$(var.RunAsHelper_TargetDir)MahApps.Metro.dll" />
+	    </Component>
+	    <Component Id="Microsoft.Practices.ServiceLocation.dll" Guid="b62cb87f-8ce8-47ca-8872-a385f27c9719">
+	      <File Id="Microsoft.Practices.ServiceLocation.dll" Name="Microsoft.Practices.ServiceLocation.dll" Source="$(var.RunAsHelper_TargetDir)Microsoft.Practices.ServiceLocation.dll" />
+	    </Component>
+	    <Component Id="Newtonsoft.Json.dll" Guid="968c69f8-6e58-4d5b-acfe-43086d4f79b8">
+	      <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.RunAsHelper_TargetDir)Newtonsoft.Json.dll" />
+	    </Component>
+	    <Component Id="Ninject.dll" Guid="85d6ff0b-02bf-4cd4-9897-7f799d1d2a61">
+	      <File Id="Ninject.dll" Name="Ninject.dll" Source="$(var.RunAsHelper_TargetDir)Ninject.dll" />
+	    </Component>
+	    <Component Id="System.Windows.Interactivity.dll" Guid="6bdc5113-5575-4eda-9b48-35611aa476c0">
+	      <File Id="System.Windows.Interactivity.dll" Name="System.Windows.Interactivity.dll" Source="$(var.RunAsHelper_TargetDir)System.Windows.Interactivity.dll" />
+	    </Component>
+	  </ComponentGroup>
+	</Fragment>
+</Wix>
