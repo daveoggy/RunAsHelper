@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -11,6 +12,7 @@ using System.Xml.Serialization;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using Microsoft.Win32;
+using Microsoft.Win32.TaskScheduler;
 using Newtonsoft.Json;
 using RunAsHelper.Views;
 
@@ -19,7 +21,7 @@ namespace RunAsHelper.ViewModel
     public class MyApplicationViewModel : ObservableObject
     {
         private string _applicationName;
-        private Icon _icon;
+        private BitmapSource _bitmapSource;
         private string _path;
 
         public MyApplicationViewModel()
@@ -31,7 +33,13 @@ namespace RunAsHelper.ViewModel
         {
             var fileDialog = new OpenFileDialog
             {
-                Filter = "Application (*.exe, *.bat, *.cmd)|*.exe;*.bat;*.cmd"
+                Filter = "Application (*.exe, *.bat, *.cmd)|*.exe;*.bat;*.cmd",
+                InitialDirectory = Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%"),
+                CustomPlaces = new List<FileDialogCustomPlace>
+                {
+                    new FileDialogCustomPlace(Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%")),
+                    new FileDialogCustomPlace(Environment.ExpandEnvironmentVariables("%ProgramFiles%"))
+                }
             };
 
             if (fileDialog.ShowDialog(OptionsView.CurrentInstance) == true)
@@ -63,30 +71,24 @@ namespace RunAsHelper.ViewModel
         [JsonIgnore]
         [XmlIgnore]
         [SoapIgnore]
-        public ImageSource IconImage
+        public ImageSource IconImage => _bitmapSource ?? (_bitmapSource = ExtractBitmapSource());
+
+        private BitmapSource ExtractBitmapSource()
         {
-            get
+            var icon = string.IsNullOrEmpty(Path) ? null : Icon.ExtractAssociatedIcon(Path);
+
+            if (icon == null) return null;
+
+            var bitmap = icon.ToBitmap().GetHbitmap();
+
+            try
             {
-                if (_icon == null)
-                {
-                    if (Path != null) _icon = Icon.ExtractAssociatedIcon(Path);
-
-                    if (_icon == null) return null;
-                }
-
-                BitmapSource bitmapSource;
-
-                var bitmap = _icon.ToBitmap().GetHbitmap();
-                try
-                {
-                    bitmapSource = Imaging.CreateBitmapSourceFromHBitmap(bitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                }
-                finally
-                {
-                    DeleteObject(bitmap);
-                }
-
-                return bitmapSource;
+                return Imaging.CreateBitmapSourceFromHBitmap(bitmap, IntPtr.Zero, Int32Rect.Empty,
+                    BitmapSizeOptions.FromEmptyOptions());
+            }
+            finally
+            {
+                DeleteObject(bitmap);
             }
         }
 
