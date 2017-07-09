@@ -131,7 +131,7 @@
     <Compile Include="LowLevelCalls\Win32.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModel\ApplicationMenuItemViewModel.cs" />
-    <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\TMainViewModel.cs" />
     <Compile Include="ViewModel\MenuItemViewModel.cs" />
     <Compile Include="ViewModel\MyApplicationViewModel.cs" />
     <Compile Include="ViewModel\ProfileViewModel.cs" />
@@ -207,9 +207,7 @@
   <ItemGroup>
     <Resource Include="MVVMLight.Nuget.Readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
       <Visible>False</Visible>

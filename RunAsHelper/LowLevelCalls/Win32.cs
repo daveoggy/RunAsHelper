@@ -2,6 +2,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace CreateProcessSample
 {
@@ -146,15 +147,13 @@ namespace CreateProcessSample
             // Variables
             var processInfo = new PROCESS_INFORMATION();
             var startInfo = new STARTUPINFO();
-            var bResult = false;
-            var uiResultWait = WAIT_FAILED;
 
             try 
             {
                 // Create process
                 startInfo.cb = Marshal.SizeOf(startInfo);
 
-                bResult = CreateProcessWithLogonW(
+                var bResult = CreateProcessWithLogonW(
                     strName, 
                     strDomain, 
                     strPassword, 
@@ -168,11 +167,6 @@ namespace CreateProcessSample
                     out processInfo
                 );
                 if (!bResult) { throw new Exception("CreateProcessWithLogonW error #" + Marshal.GetLastWin32Error()); }
-
-                // Wait for process to end
-                //uiResultWait = WaitForSingleObject(processInfo.hProcess, INFINITE);
-                //if (uiResultWait == WAIT_FAILED) { throw new Exception("WaitForSingleObject error #" + Marshal.GetLastWin32Error()); }
-
             } 
             finally
             {
