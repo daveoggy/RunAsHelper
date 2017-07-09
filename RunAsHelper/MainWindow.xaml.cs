@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Security.Principal;
+using System.Windows;
 
 namespace RunAsHelper
 {

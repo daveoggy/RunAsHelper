@@ -4,18 +4,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+        xmlns:cmd="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Platform"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:command="http://www.galasoft.ch/mvvmlight"
         Title="Configuration" Height="480" Width="640"
         BorderBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         DataContext="{Binding Source={StaticResource Locator}, Path=Main}">
     <Window.Resources>
         <DataTemplate x:Key="ListBoxItemTemplate">
-            <!--<StackPanel Orientation="Vertical">
-                <Image Source="{Binding IconImage}"
-                       Width="32"
-                       Height="32"/>
-                <TextBlock Text="{Binding ApplicationName}" VerticalAlignment="Center"/>
-            </StackPanel>-->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition SharedSizeGroup="SharedGroup" />
@@ -40,37 +37,65 @@
         </DataTemplate>
     </Window.Resources>
     <DockPanel>
-        <Button Style="{StaticResource AccentedSquareButtonStyle}" Margin="10" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Width="80" Content="Close" Click="CloseOptionsDialog" />
-        <m:MetroTabControl>
+        <!--<Grid Margin="10" DockPanel.Dock="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="90" />
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            --><!--
+        </Grid>-->
+        <m:MetroTabControl x:Name="TabControl">
             <m:MetroTabItem Header="User Profiles">
-                <DockPanel Margin="10">
-                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-                        <Button Margin="0,0,5,0" Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Add" Command="{Binding AddProfile}" />
-                        <Button Margin="0,0,5,0" Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Remove" Command="{Binding RemoveProfile}" />
-                        <Button Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Edit" Command="{Binding EditProfile}" />
-                    </StackPanel>
-                    <ListBox SelectedItem="{Binding SelectedProfile}"
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="30" />
+                    </Grid.RowDefinitions>
+                    <ListBox Grid.ColumnSpan="4" SelectedItem="{Binding SelectedProfile}"
                              ItemsSource="{Binding Profiles}" 
                              ItemTemplate="{StaticResource ProfileTemplate}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                        <!--<ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>-->
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="MouseDoubleClick">
+                                <command:EventToCommand Command="{Binding Mode=OneWay, Path=EditProfile}" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
                     </ListBox>
-                </DockPanel>
+                    <Button Grid.Row="1" Grid.Column="0"  Margin="0,0,5,0" Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Add" Command="{Binding AddProfile}" />
+                    <Button Grid.Row="1" Grid.Column="1" Margin="0,0,5,0" Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Remove" Command="{Binding RemoveProfile}" />
+                    <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource AccentedSquareButtonStyle}" Width="80" Content="Edit" Command="{Binding EditProfile}" />
+                    <Button Grid.Row="1" Grid.Column="3" Style="{StaticResource AccentedSquareButtonStyle}" HorizontalAlignment="Right" Width="80" Content="Close" Click="CloseOptionsDialog" />
+                </Grid>
             </m:MetroTabItem>
             <m:MetroTabItem Header="Applications">
-                <DockPanel Margin="10">
-                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-                        <Button Width="80" Content="Add" Style="{StaticResource AccentedSquareButtonStyle}" Command="{Binding AddApplication}" />
-                        <Button Width="80" Content="Remove" Style="{StaticResource AccentedSquareButtonStyle}" Command="{Binding RemoveApplication}" />
-                    </StackPanel>
-                    <ListBox ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="30" />
+                    </Grid.RowDefinitions>
+                    <ListBox Grid.ColumnSpan="4" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 SelectedItem="{Binding SelectedApplicationViewModel}" 
                              ItemsSource="{Binding Applications}" 
                              ItemTemplate="{StaticResource ListBoxItemTemplate}">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="MouseDoubleClick">
+                                <command:EventToCommand Command="{Binding Mode=OneWay, Path=EditApplication}" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
@@ -83,12 +108,35 @@
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                     </ListBox>
-                </DockPanel>
+                    <Button Grid.Row="1" Grid.Column="0" Width="80" Content="Add" Style="{StaticResource AccentedSquareButtonStyle}" Command="{Binding AddApplication}" />
+                    <Button Grid.Row="1" Grid.Column="1" Width="80" Content="Remove" Style="{StaticResource AccentedSquareButtonStyle}" Command="{Binding RemoveApplication}" />
+                    <Button Grid.Row="1" Grid.Column="2" Width="80" Content="Edit" Style="{StaticResource AccentedSquareButtonStyle}"  Command="{Binding EditApplication}" />
+                    <Button Grid.Row="1" Grid.Column="3" Style="{StaticResource AccentedSquareButtonStyle}" HorizontalAlignment="Right" Width="80" Content="Close" Click="CloseOptionsDialog" />
+                </Grid>
             </m:MetroTabItem>
             <m:MetroTabItem Header="Options">
-                <StackPanel Margin="50">
-                    <m:ToggleSwitch OnLabel="Start with Windows (ON)" OffLabel="Start with Windows (OFF)" />
-                </StackPanel>
+                <Grid Margin="10">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition Height="30" />
+                    </Grid.RowDefinitions>
+                    <m:ToggleSwitch IsChecked="{Binding StartWithWindowsEnabled, Mode=TwoWay}" OnLabel="Start with Windows (ON)" OffLabel="Start with Windows (OFF)" >
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Checked">
+                                <command:EventToCommand Command="{Binding Mode=OneWay, Path=StartWithWindows}" />
+                            </i:EventTrigger>
+                            <i:EventTrigger EventName="Unchecked">
+                                <command:EventToCommand Command="{Binding Mode=OneWay, Path=StartWithWindows}" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </m:ToggleSwitch>
+
+                    <!--<m:ToggleSwitch Grid.Row="1" OnLabel="Enable Data Lake" IsChecked="True" />-->
+
+                    <Button Grid.Row="2" Style="{StaticResource AccentedSquareButtonStyle}" HorizontalAlignment="Right" Width="80" Content="Close" Click="CloseOptionsDialog" />
+                </Grid>
             </m:MetroTabItem>
         </m:MetroTabControl>
     </DockPanel>

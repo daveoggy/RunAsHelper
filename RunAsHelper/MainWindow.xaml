@@ -21,6 +21,7 @@
             <Setter Property="Command" Value="{Binding MenuItemCommand}" />
             <Setter Property="CommandParameter" Value="{Binding}" />
             <Setter Property="ItemsSource" Value="{Binding MenuItems}" />
+            <Setter Property="Margin" Value="10,0,10,0" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding}" Value="{x:Null}">
                     <Setter Property="MenuItem.Template" >

@@ -18,6 +18,9 @@ using Microsoft.Win32;
 using Newtonsoft.Json;
 using RunAsHelper.Properties;
 using RunAsHelper.Views;
+using System.Security.Principal;
+using Microsoft.Win32.TaskScheduler;
+using System.Security.Permissions;
 
 namespace RunAsHelper.ViewModel
 {
@@ -25,11 +28,11 @@ namespace RunAsHelper.ViewModel
     {
         private static readonly String[] ExistingApplications = new string[]
             {
-                Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft Visual Studio 11.0\Common7\IDE\devenv.exe",
-                Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe",
-                Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft Visual Studio 9.0\Common7\IDE\devenv.exe",
-                Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft Visual Studio 8.0\Common7\IDE\devenv.exe",
-                Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft SQL Server\100\Tools\Binn\VSShell\Common7\IDE\ssms.exe",
+                //Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft Visual Studio 11.0\Common7\IDE\devenv.exe",
+                //Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe",
+                //Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft Visual Studio 9.0\Common7\IDE\devenv.exe",
+                //Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft Visual Studio 8.0\Common7\IDE\devenv.exe",
+                //Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%") + @"\Microsoft SQL Server\100\Tools\Binn\VSShell\Common7\IDE\ssms.exe",
                 Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\System32\cmd.exe",
                 Environment.ExpandEnvironmentVariables("%SystemRoot%") + @"\system32\WindowsPowerShell\v1.0\powershell.exe",
             };
@@ -55,6 +58,8 @@ namespace RunAsHelper.ViewModel
                     Applications = new ObservableCollection<MyApplicationViewModel>();    
                 }
 
+                StartWithWindowsEnabled = Settings.Default.StartWithWindows;
+
                 if (Settings.Default.FirstRun)
                 {
                     LookForExistingApplications();
@@ -67,6 +72,9 @@ namespace RunAsHelper.ViewModel
 
             AddApplication = new RelayCommand(AddApplicationCommand);
             RemoveApplication = new RelayCommand(() => Applications.Remove(SelectedApplicationViewModel), () => SelectedApplicationViewModel != null);
+            EditApplication = new RelayCommand(() => EditApplicationCommand(), () => SelectedApplicationViewModel != null);
+
+            StartWithWindows = new RelayCommand(StartWithWindowsCommand);
 
             MenuItems = new ObservableCollection<MenuItemViewModel>();
 
@@ -74,6 +82,50 @@ namespace RunAsHelper.ViewModel
 
             Profiles.CollectionChanged += CollectionChanged;
             Applications.CollectionChanged += CollectionChanged;
+        }
+
+        private void StartWithWindowsCommand()
+        {
+            var pricipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            var hasAdministrativeRight = pricipal.IsInRole(WindowsBuiltInRole.Administrator);
+
+            if (!hasAdministrativeRight)
+            {
+                ProcessStartInfo info = new ProcessStartInfo(@"RunAsHelper.exe");
+                info.Arguments = "StartWithWindows " + StartWithWindowsEnabled;
+                info.UseShellExecute = true;
+                info.Verb = "runas";
+                Process.Start(info);
+
+                return;
+            }
+
+            ModifyStartWithWindows(StartWithWindowsEnabled);
+        }
+
+        public static void ModifyStartWithWindows(bool enabled)
+        {
+            var exe = new FileInfo("RunAsHelper.exe");
+
+            var task = TaskService.Instance.GetTask("Auto Start RunAsHelper");
+
+            if (enabled == true)
+            {
+                task = task ?? TaskService.Instance.AddTask("Auto Start RunAsHelper", QuickTriggerType.Logon, exe.FullName);
+
+                task.Definition.Settings.DisallowStartIfOnBatteries = false;
+                task.Definition.Settings.StopIfGoingOnBatteries = false;
+                task.Definition.Settings.ExecutionTimeLimit = TimeSpan.Zero;
+                task.Definition.Settings.MultipleInstances = TaskInstancesPolicy.StopExisting;
+
+                task.Enabled = true;
+                task.RegisterChanges();
+            }
+            else if (task != null)
+            {
+                task.Enabled = false;
+                task.RegisterChanges();
+            }
         }
 
         private void LookForExistingApplications()
@@ -89,6 +141,27 @@ namespace RunAsHelper.ViewModel
                 }
             }
 
+            foreach (var visualStudio in Directory
+                .GetDirectories(Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%"), "*Visual Studio*")
+                .SelectMany(a => Directory.GetFiles(a, "devenv.exe", SearchOption.AllDirectories)))
+            {
+                var tempFileInfo = new FileInfo(visualStudio);
+                if (!currentApp.Contains(tempFileInfo.FullName.ToUpper()) && tempFileInfo.Exists)
+                {
+                    ProcessFilenameAndAddApplication(tempFileInfo.FullName, true);
+                }
+            }
+
+            foreach (var ssms in Directory
+                .GetDirectories(Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%"), "*SQL Server*")
+                .SelectMany(a => Directory.GetFiles(a, "ssms.exe", SearchOption.AllDirectories)))
+            {
+                var tempFileInfo = new FileInfo(ssms);
+                if (!currentApp.Contains(tempFileInfo.FullName.ToUpper()) && tempFileInfo.Exists)
+                {
+                    ProcessFilenameAndAddApplication(tempFileInfo.FullName);
+                }
+            }
 
             Settings.Default.Applications = Applications;
             Settings.Default.FirstRun = false;
@@ -147,14 +220,37 @@ namespace RunAsHelper.ViewModel
             });
         }
 
-
-
         private void StartApplication(ApplicationMenuItemViewModel applicationMenuItemViewModel)
         {
             var password = EncryptionHelper.Decrypt(applicationMenuItemViewModel.ProfileViewModel.EncryptedPassword);
             var username = applicationMenuItemViewModel.ProfileViewModel.GetUsernameWithoutDomain();
             var domain = applicationMenuItemViewModel.ProfileViewModel.Domain;
 
+            var pricipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            var hasAdministrativeRight = pricipal.IsInRole(WindowsBuiltInRole.Administrator);
+
+            if (applicationMenuItemViewModel.ApplicationViewModel.RunAsLocalAdmin && !hasAdministrativeRight)
+            {
+                var startProcessPayload = new StartProcessPayload
+                {
+                    Domain = domain,
+                    Username = username,
+                    Password = password,
+                    Path = applicationMenuItemViewModel.ApplicationViewModel.Path
+                };
+
+                var payload = EncryptionHelper.Encrypt(JsonConvert.SerializeObject(startProcessPayload));
+
+                var runAsHelperExe = new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RunAsHelper.exe"));
+
+                ProcessStartInfo info = new ProcessStartInfo(runAsHelperExe.FullName);
+                info.Arguments = payload;
+                info.UseShellExecute = true;
+                info.Verb = "runas";
+                Process.Start(info);
+
+                return;
+            }
 
             try
             {
@@ -192,33 +288,51 @@ namespace RunAsHelper.ViewModel
 
         private void AddApplicationCommand()
         {
-            var fileDialog = new OpenFileDialog
+            var applicationViewModel = new MyApplicationViewModel();
+
+            ApplicationDialog applicationDialog = new ApplicationDialog(applicationViewModel)
             {
-                Filter = "Application (*.exe, *.bat, *.cmd)|*.exe;*.bat;*.cmd"
+                Owner = OptionsView.CurrentInstance,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
-            //fileDialog.Owner = OptionsView.CurrentInstance;
-            //fileDialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
-            if (fileDialog.ShowDialog(OptionsView.CurrentInstance) == true)
+            if (applicationDialog.ShowDialog() == true)
             {
-                ProcessFilenameAndAddApplication(fileDialog.FileName);
+                Applications.Add(applicationViewModel);
+            }
+        }
+        private void EditApplicationCommand()
+        {
+            var applicationViewModel = new MyApplicationViewModel();
+
+            applicationViewModel.Path = SelectedApplicationViewModel.Path;
+            applicationViewModel.RunAsLocalAdmin = SelectedApplicationViewModel.RunAsLocalAdmin;
+
+            ApplicationDialog applicationDialog = new ApplicationDialog(applicationViewModel)
+            {
+                Owner = OptionsView.CurrentInstance,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            if (applicationDialog.ShowDialog() == true)
+            {
+                SelectedApplicationViewModel.Path = applicationViewModel.Path;
+                SelectedApplicationViewModel.RunAsLocalAdmin = applicationViewModel.RunAsLocalAdmin;
             }
         }
 
-        private void ProcessFilenameAndAddApplication(String filename)
+        private void ProcessFilenameAndAddApplication(String filename, bool asAdmin = false)
         {
             var fileInfo = new FileInfo(filename);
 
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileInfo.FullName);
-
-            
 
             var applicationViewModel = new MyApplicationViewModel
                 {
                     ApplicationName =
                         String.IsNullOrEmpty(fileVersionInfo.FileDescription) ? fileInfo.Name : fileVersionInfo.FileDescription,
                     Path = fileInfo.FullName,
+                    RunAsLocalAdmin = asAdmin
                 };
 
             Applications.Add(applicationViewModel);
@@ -308,13 +422,19 @@ namespace RunAsHelper.ViewModel
         public RelayCommand EditProfile { get; set; }
         public RelayCommand AddApplication { get; set; }
         public RelayCommand RemoveApplication { get; set; }
+        public RelayCommand EditApplication { get; set; }
 
         public MyApplicationViewModel SelectedApplicationViewModel { get; set; }
+
+        public RelayCommand StartWithWindows { get; set; }
+
+        public bool StartWithWindowsEnabled { get; set; }
 
         public void SaveChanges()
         {
             Settings.Default.Profiles = Profiles;
             Settings.Default.Applications = Applications;
+            Settings.Default.StartWithWindows = StartWithWindowsEnabled;
             Settings.Default.Save();
         }
     }
